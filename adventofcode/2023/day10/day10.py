@@ -73,8 +73,8 @@ def printMapWithMarkedGrid(map):
     for i in range(min_y, max_y + 1):
         for j in range(min_x, max_x + 1):
             print(
-                charMapper[map[i][j].name] if getattr(map[i][j], 'mark', None) else "*" if getattr(map[i][j], 'enclose',
-                                                                                                   True) else "0",
+                charMapper[map[i][j].name] if getattr(map[i][j], 'mark', None) else "*"
+                if getattr(map[i][j], 'enclose',True) else "0",
                 end="")  # 打印每个元素并以空格分隔
             pass
         print()
@@ -172,41 +172,18 @@ for point in possibleNodes:
         # print(path)
 print("end")
 
-print(
-    "++++++++++++++++++++++++++++++++++++++++++++++++step2 find the pipe enclose in loop++++++++++++++++++++++++++++++++++++++++++++++++")
+
+# you can see the S pipi's value is |  todo
+def analysisi(pre, next):
+    start_point.name = '|'
+    start_point.mark = True
+    return '|'
+    pass
 
 
-def valid(x, y, map):
-    max_x = len(map[0]) - 1
-    max_y = len(map) - 1
-    if x < 0 or x > max_x or y < 0 or y > max_y:
-        return False
-    return True
+start_val =  analysisi(path[1], path[len(path)-1])
 
-
-def resolveRoundPoint(pointList):
-    stack = pointList
-    while stack:
-        cur_point = stack.pop()
-        if getattr(cur_point, 'visit', None):
-            continue
-        cur_point.visit = True
-        coordinates = [(0, 1), (0, -1), (1, 0), (-1, 0)]
-        try:
-            points = [cur_point.map[cur_point.y + coordinate[0]][cur_point.x + coordinate[1]] for coordinate in
-                      coordinates if valid(cur_point.x + coordinate[1], cur_point.y + coordinate[0], cur_point.map)]
-        except Exception:
-            print("Invalid")
-        hasNoEncloseTile = next((p for p in points if getattr(p, 'enclose', None) != None and p.enclose == False), None)
-        isBoundNode = next((coordinate for coordinate in coordinates if
-                            not valid(cur_point.x + coordinate[1], cur_point.y + coordinate[0], cur_point.map)), None)
-        if hasNoEncloseTile or isBoundNode:
-            if not getattr(cur_point, 'mark', None):
-                cur_point.enclose = False
-                for p in points:
-                    if not getattr(p, 'visit', None):
-                        stack.append(p)
-        pass
+print("++++++++++++++++++++++++++++++++++++++++++++++++step2 find the pipe enclose in loop++++++++++++++++++++++++++++++++++++++++++++++++")
 
 
 def filterTheOutLoop(map):
@@ -220,30 +197,29 @@ def filterTheOutLoop(map):
     # set the pipe not in the matrix that has pipe in the loop  by enclosed
     for i in range(len(map)):
         for j in range(len(map[0])):
+            point = map[i][j]
             if j < min_x or j > max_x or i < min_y or i > max_y:
-                point = map[i][j]
                 point.enclose = False
-                point.visit = True
+                # point.visit = True
+            else:
+                if not getattr(point, 'mark', None) :
+                    if inside(point) == 1:
+                        point.enclose = True
+                        # point.visit = True
+                    else:
+                        point.enclose = False
+                        # point.visit = True
+                pass
         pass
     pass
     printMapWithMarkedGrid(map)
-    # if True:
-    #     return
-    firstPoints = []
-    for i in range(min_x, max_x + 1):
-        firstPoints.append(map[min_y][i])
-        firstPoints.append(map[max_y][i])
-    for i in range(min_y, max_y + 1):
-        firstPoints.append(map[i][min_x])
-        firstPoints.append(map[i][max_x])
 
-    resolveRoundPoint(firstPoints)
 
 
 def inside(point):
     pre = ''
     count = 0
-    for i in range(point.x + 1, map[0].length):
+    for i in range(point.x + 1, len(map[0])):
         cur_point = map[point.y][i]
         if getattr(cur_point, 'mark', None):
             if cur_point.name == '|':
@@ -259,3 +235,6 @@ print("==============main function step2==================")
 filterTheOutLoop(map)
 print("filter:")
 printMapWithMarkedGrid(map)
+
+count = sum(1 for item in one_d_array if getattr(item,'enclose',False) == True)
+print("count:",count)
