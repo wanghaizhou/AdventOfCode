@@ -8,6 +8,7 @@ class Pipe:
     def setMap(self,map):
         self.map = map
 
+    # add the connected pipe to the list
     def calculate(self):
         coordinates = {
             "7": [(-1, 0),(0, 1)],
@@ -37,8 +38,8 @@ class Pipe:
         else:
             list.append(self.map[y][x])
 
-
-def mapToPicture(map):
+# print all the map
+def printMap(map):
     result = [ [ point.name for point in row] for row in map]
     for row in result:
         for element in row:
@@ -58,15 +59,14 @@ charMapper = {
     "S": "S"
 }
 
-def mapToPictureOnlyPath(map):
+# print the map that can see the loop directly, change grid that not in the loop to *
+def printMapWithMarkedGrid(map):
     all_x = [point.x for row in map for point in row if getattr(point, 'mark', None)]
     all_y = [point.y for row in map for point in row if getattr(point, 'mark', None)]
     max_x = max(all_x)
     min_x = min(all_x)
     max_y = max(all_y)
     min_y = min(all_y)
-
-    result = [[point.name if getattr(point, 'mark', None) else "*" for point in row] for row in map]
 
     for i in range(min_y,max_y+1):
         for j in range(min_x,max_x+1):
@@ -75,58 +75,38 @@ def mapToPictureOnlyPath(map):
         print()
         pass
     print("next step")
-    # for row in result:
-    #     for element in row:
-    #         print(element, end="")  # 打印每个元素并以空格分隔
-    #     print()  # 在每行结束时打印换行符
-    return  result
     pass
 
-
-
-# 读入文件内容
-with open('input.txt', 'r') as file:
-    content = file.readlines()
-
-# 去除每行末尾的换行符
-content = [line.strip() for line in content]
-two_d_array = [list(row.strip()) for row in content]
-
-map = []
-for i in range(len(two_d_array)):
-    row_map = []
-    for j in range(len(two_d_array[0])):
+def readInputToMap():
+    global map
+    # read the input file
+    with open('input.txt', 'r') as file:
+        content = file.readlines()
+    # 去除每行末尾的换行符
+    content = [line.strip() for line in content]
+    two_d_array = [list(row.strip()) for row in content]
+    map = []
+    for i in range(len(two_d_array)):
+        row_map = []
+        for j in range(len(two_d_array[0])):
+            pass
+            row_map.append(Pipe(two_d_array[i][j], j, i))
+        map.append(row_map)
         pass
-        row_map.append(Pipe(two_d_array[i][j], j, i))
-    map.append(row_map)
-    pass
 
-mapToPicture(map)
-
-one_d_array = [element for row in map for element in row]
-for pipe in one_d_array:
-    pipe.setMap(map)
-    pipe.calculate()
-    pass
-
-start_point = next((tup for tup in one_d_array if tup.name == 'S'), None)
-
-def findPeripheralNodesToS(start_point):
+# find the peripheral pipe
+def findPeripheralPipesToS(start_point):
     points = [(-1,0),(1,0),(0,1),(0,-1)]
     list = [ map[start_point.y+point[1]][start_point.x+point[0]] for point in points]
-    # list = [point for point in list if point.list.index(start_point)]
     return list
 
-points = findPeripheralNodesToS(start_point)
-possibleNodes = [point for point in points if  point.list is not None and  (start_point in point.list)]
-
-def printMap(map, path):
+def printMapWithLoop(map, path):
     for node in path:
         node.mark = True
-    test = mapToPictureOnlyPath(map)
+    printMapWithMarkedGrid(map)
     print("find the way ++++++++++++")
-    # print(test)
     pass
+
 
 def findTheWay(inputPath):
     stack = [inputPath]
@@ -141,13 +121,13 @@ def findTheWay(inputPath):
                 # printMap(point.map,path)
                 pass
             if start is not None and len(path)>2:
-                printMap(point.map,path)
+                printMapWithLoop(point.map,path)
                 return path
                 pass
             if nextNode is not None:
                 path.append(nextNode)
                 stack.append(PointWay(point, nextNode, path))
-    printMap(inputPath.point.map,inputPath.path)
+    printMapWithLoop(inputPath.point.map,inputPath.path)
     pass
 
 class PointWay:
@@ -158,18 +138,33 @@ class PointWay:
 
 
 
+#++++++++++++++++++++++++++++++++++++ main function ++++++++++++++++++++++++++++++++++++
+print("++++++++++++++++++++++++++++++++++++++++++++++++step1 find the loop++++++++++++++++++++++++++++++++++++++++++++++++")
+readInputToMap()
+printMap(map)
+
+one_d_array = [element for row in map for element in row]
+# find the pipe marked with "S"
+start_point = next((tup for tup in one_d_array if tup.name == 'S'), None)
+# init the pipe object
+for pipe in one_d_array:
+    pipe.setMap(map)
+    pipe.calculate()
+    pass
+
+points = findPeripheralPipesToS(start_point)
+possibleNodes = [point for point in points if  point.list is not None and  (start_point in point.list)]
+
 for point in possibleNodes:
     path = findTheWay(PointWay(start_point,point,[start_point,point]))
     if path is not None:
         print("++++++++++++++++++++++++++++++++++++++++++++++++")
-        print(len(path)/2)
+        print("the loop's depth",len(path)/2)
         # print(path)
-
 print("end")
 
 
-print("++++++++++++++++++++++++++++++++++++++++++++++++step2 find the loop++++++++++++++++++++++++++++++++++++++++++++++++")
-
+print("++++++++++++++++++++++++++++++++++++++++++++++++step2 find the pipe enclose in loop++++++++++++++++++++++++++++++++++++++++++++++++")
 
 def valid(x, y, map):
     max_x = len(map[0])-1
@@ -186,25 +181,19 @@ def resolveRoundPoint(pointList):
         if getattr(cur_point, 'visit', None) :
             continue
         cur_point.visit = True
-        # if(cur_point.enclose is not None):
-        #     pass
         coordinates = [(0,1),(0,-1),(1,0),(-1,0)]
         try:
             points = [ cur_point.map[cur_point.y+coordinate[0]][cur_point.x+coordinate[1]] for coordinate in coordinates if valid(cur_point.x+coordinate[1],cur_point.y+coordinate[0],cur_point.map)]
         except Exception:
             print("Invalid")
-
         hasNoEncloseTile = next( (p for p in points if getattr(p,'enclose',None)!=None and p.enclose==False),None)
         isBoundNode = next( (coordinate for coordinate in coordinates if not valid(cur_point.x+coordinate[1],cur_point.y+coordinate[0],cur_point.map)) ,None)
         if hasNoEncloseTile or isBoundNode:
             if not getattr(cur_point, 'mark', None):
-            # if cur_point.name == "*":
                 cur_point.enclose = False
                 for p in points:
                     if not getattr(p,'visit',None) :
                         stack.append(p)
-            # if cur_point.name == "":
-            #     pass
         pass
 
 
@@ -216,7 +205,7 @@ def filterTheOutLoop(map):
     max_y = max(all_y)
     min_y = min(all_y)
 
-    # 最外层设置成非 enclosed
+    # set the pipe not in the matrix that has pipe in the loop  by enclosed
     for i in range(len(map)):
         for j in range(len(map[0])):
             if j< min_x or j> max_x or i<min_y or i> max_y:
@@ -225,7 +214,7 @@ def filterTheOutLoop(map):
                 point.visit = True
         pass
     pass
-    mapToPictureOnlyPath(map)
+    printMapWithMarkedGrid(map)
     # if True:
     #     return
     firstPoints = []
@@ -238,11 +227,9 @@ def filterTheOutLoop(map):
 
     resolveRoundPoint(firstPoints)
 
+print("==============main function step2==================")
 filterTheOutLoop(map)
-
-
 print("filter:")
-mapToPictureOnlyPath(map)
+printMapWithMarkedGrid(map)
 
-# print(map)
 
