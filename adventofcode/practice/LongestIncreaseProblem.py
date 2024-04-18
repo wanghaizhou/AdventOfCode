@@ -10,11 +10,21 @@
 def calculate(nums):
     dp = [0]*len(nums)
     dp[0] = 1
-    for i in range(1,nums):
+    for i in range(1,len(nums)):
         # max(dp)+1,
         # for j in range(i):
+
+        list = [0]
+        for j in range(0,i):
+            if nums[j] < nums[i]:
+                list.append(dp[j])
+        dp[i] =  max(list)+1
         pass
 
+    print(dp)
+    return max(dp)
     pass
 
-calculate([10,9,2,5,3,7,101,18])
+# lenth = calculate([10,9,2,5,3,7,101,18])
+lenth = calculate([2,3,7,101])
+print('lenth',lenth)
